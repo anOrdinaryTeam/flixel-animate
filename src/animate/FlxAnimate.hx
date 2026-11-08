@@ -279,7 +279,7 @@ class FlxAnimate extends FlxSprite
 		command.transform = colorTransform;
 		command.blend = blend;
 		command.antialiasing = antialiasing;
-		command.shader = shader;
+		command.shader = drawShader;
 		command.onSymbolDraw = onSymbolDraw;
 
 		timeline.currentFrame = animation.frameIndex;
@@ -326,7 +326,18 @@ class FlxAnimate extends FlxSprite
 
 	function drawRenderTexture(camera:FlxCamera, matrix:FlxMatrix):Void
 	{
-		_renderTexture.draw(this, camera, matrix, colorTransform, blend, antialiasing, shader, blendTarget);
+		_renderTexture.draw(this, camera, matrix, colorTransform, blend, antialiasing, drawShader, blendTarget);
+	}
+
+	var drawShader(get, never):Null<flixel.system.FlxAssets.FlxShader>;
+
+	inline function get_drawShader()
+	{
+		#if flixel_cne
+		return shaderEnabled ? shader : null;
+		#else
+		return shader;
+		#end
 	}
 
 	public var onSymbolDraw:Null<(symbol:SymbolInstance, command:AnimateDrawCommand) -> Void>;
@@ -360,7 +371,7 @@ class FlxAnimate extends FlxSprite
 
 		frame.prepareMatrix(matrix, FlxFrameAngle.ANGLE_0, checkFlipX(), checkFlipY());
 		prepareDrawMatrix(matrix, camera);
-		camera.drawPixels(frame, framePixels, matrix, colorTransform, blend, antialiasing, shader, blendTarget);
+		camera.drawPixels(frame, framePixels, matrix, colorTransform, blend, antialiasing, drawShader, blendTarget);
 	}
 
 	function prepareDrawMatrix(matrix:FlxMatrix, camera:FlxCamera):Void
@@ -381,6 +392,21 @@ class FlxAnimate extends FlxSprite
 		}
 
 		matrix.translate(-origin.x, -origin.y);
+
+		#if flixel_cne
+		if (frameOffsetAngle != null && frameOffsetAngle != angle)
+		{
+			var angleOff = (frameOffsetAngle - angle) * FlxAngle.TO_RAD;
+			var cos = Math.cos(angleOff);
+			var sin = Math.sin(angleOff);
+			matrix.rotateWithTrig(cos, -sin);
+			matrix.translate(-frameOffset.x, -frameOffset.y);
+			matrix.rotateWithTrig(cos, sin);
+		}
+		else
+			matrix.translate(-frameOffset.x, -frameOffset.y);
+		#end
+
 		matrix.scale(scale.x, scale.y);
 
 		if (angle != 0)
@@ -407,6 +433,10 @@ class FlxAnimate extends FlxSprite
 
 		if (isPixelPerfectRender(camera))
 			preparePixelPerfectMatrix(matrix);
+
+		#if flixel_cne
+		doAdditionalMatrixStuff(matrix, camera);
+		#end
 	}
 
 	function preparePixelPerfectMatrix(matrix:FlxMatrix):Void
