@@ -332,13 +332,7 @@ class FlxAnimate extends FlxSprite
 	var drawShader(get, never):Null<flixel.system.FlxAssets.FlxShader>;
 
 	inline function get_drawShader()
-	{
-		#if flixel_cne
 		return shaderEnabled ? shader : null;
-		#else
-		return shader;
-		#end
-	}
 
 	public var onSymbolDraw:Null<(symbol:SymbolInstance, command:AnimateDrawCommand) -> Void>;
 
@@ -393,7 +387,6 @@ class FlxAnimate extends FlxSprite
 
 		matrix.translate(-origin.x, -origin.y);
 
-		#if flixel_cne
 		if (frameOffsetAngle != null && frameOffsetAngle != angle)
 		{
 			var angleOff = (frameOffsetAngle - angle) * FlxAngle.TO_RAD;
@@ -405,7 +398,6 @@ class FlxAnimate extends FlxSprite
 		}
 		else
 			matrix.translate(-frameOffset.x, -frameOffset.y);
-		#end
 
 		matrix.scale(scale.x, scale.y);
 
@@ -434,9 +426,7 @@ class FlxAnimate extends FlxSprite
 		if (isPixelPerfectRender(camera))
 			preparePixelPerfectMatrix(matrix);
 
-		#if flixel_cne
 		doAdditionalMatrixStuff(matrix, camera);
-		#end
 	}
 
 	function preparePixelPerfectMatrix(matrix:FlxMatrix):Void
